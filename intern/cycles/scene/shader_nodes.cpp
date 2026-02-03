@@ -6655,9 +6655,6 @@ OutputAOVNode::OutputAOVNode() : ShaderNode(get_node_type())
 void OutputAOVNode::simplify_settings(Scene *scene)
 {
   offset = scene->film->get_aov_offset(scene, name.string(), is_color);
-  if (offset == -1) {
-    offset = scene->film->get_aov_offset(scene, name.string(), is_color);
-  }
 
   if (offset == -1 || is_color) {
     input("Value")->disconnect();
@@ -6845,6 +6842,7 @@ NODE_DEFINE(VectorMathNode)
   type_enum.insert("normalize", NODE_VECTOR_MATH_NORMALIZE);
 
   type_enum.insert("snap", NODE_VECTOR_MATH_SNAP);
+  type_enum.insert("round", NODE_VECTOR_MATH_ROUND);
   type_enum.insert("floor", NODE_VECTOR_MATH_FLOOR);
   type_enum.insert("ceil", NODE_VECTOR_MATH_CEIL);
   type_enum.insert("modulo", NODE_VECTOR_MATH_MODULO);
@@ -7589,6 +7587,11 @@ NODE_DEFINE(NormalMapNode)
   space_enum.insert("blender_world", NODE_NORMAL_MAP_BLENDER_WORLD);
   SOCKET_ENUM(space, "Space", space_enum, NODE_NORMAL_MAP_TANGENT);
 
+  static NodeEnum convention_enum;
+  convention_enum.insert("opengl", 0);
+  convention_enum.insert("directx", 1);
+  SOCKET_ENUM(convention, "Convention", convention_enum, NODE_NORMAL_MAP_CONVENTION_OPENGL);
+
   SOCKET_STRING(attribute, "Attribute", ustring());
 
   SOCKET_IN_FLOAT(strength, "Strength", 1.0f);
@@ -7649,7 +7652,7 @@ void NormalMapNode::compile(SVMCompiler &compiler)
                                            compiler.stack_assign(normal_out),
                                            space),
                     attr,
-                    attr_sign);
+                    attr_sign | (convention == 1 ? NODE_NORMAL_MAP_CONVENTION_DIRECTX : 0));
 }
 
 void NormalMapNode::compile(OSLCompiler &compiler)
@@ -7669,6 +7672,7 @@ void NormalMapNode::compile(OSLCompiler &compiler)
   }
 
   compiler.parameter(this, "space");
+  compiler.parameter(this, "convention");
   compiler.add(this, "node_normal_map");
 }
 

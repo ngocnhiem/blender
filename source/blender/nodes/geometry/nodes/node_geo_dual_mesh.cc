@@ -142,15 +142,15 @@ static void transfer_attributes(
 {
   /* Retrieve all attributes except for position which is handled manually.
    * Remove anonymous attributes that don't need to be propagated. */
-  Set<StringRefNull> attribute_ids = src_attributes.all_ids();
-  attribute_ids.remove("position");
-  attribute_ids.remove(".edge_verts");
-  attribute_ids.remove(".corner_vert");
-  attribute_ids.remove(".corner_edge");
-  attribute_ids.remove("sharp_face");
-  attribute_ids.remove_if([&](const StringRef id) { return attribute_filter.allow_skip(id); });
+  Set<StringRefNull> names = src_attributes.all_names();
+  names.remove("position");
+  names.remove(".edge_verts");
+  names.remove(".corner_vert");
+  names.remove(".corner_edge");
+  names.remove("sharp_face");
+  names.remove_if([&](const StringRef id) { return attribute_filter.allow_skip(id); });
 
-  for (const StringRef id : attribute_ids) {
+  for (const StringRef id : names) {
     GAttributeReader src = src_attributes.lookup(id);
 
     AttrDomain out_domain;
@@ -174,8 +174,7 @@ static void transfer_attributes(
     switch (src.domain) {
       case AttrDomain::Point: {
         const GVArraySpan src_span(*src);
-        bke::attribute_math::convert_to_static_type(data_type, [&](auto dummy) {
-          using T = decltype(dummy);
+        bke::attribute_math::to_static_type(data_type, [&]<typename T>() {
           copy_data_based_on_vertex_types(
               src_span.typed<T>(), dst.span.typed<T>(), vertex_types, keep_boundaries);
         });
@@ -187,8 +186,7 @@ static void transfer_attributes(
       case AttrDomain::Face: {
         const GVArraySpan src_span(*src);
         dst.span.take_front(src_span.size()).copy_from(src_span);
-        bke::attribute_math::convert_to_static_type(data_type, [&](auto dummy) {
-          using T = decltype(dummy);
+        bke::attribute_math::to_static_type(data_type, [&]<typename T>() {
           if (keep_boundaries) {
             copy_data_based_on_pairs(
                 src_span.typed<T>(), dst.span.typed<T>(), boundary_vertex_to_relevant_face_map);

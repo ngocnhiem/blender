@@ -26,10 +26,9 @@ std::optional<VKTexturePool::Segment> VKTexturePool::AllocationHandle::acquire(
     VkMemoryRequirements requirements)
 {
   /* `memoryType` uses 0 as special value to indicate no memory type restrictions.
-   * If there are restrictions, we check against `memoryTypeBits`.  */
-  if (allocation_info.memoryType != 0 &&
-      !bool(requirements.memoryTypeBits & allocation_info.memoryType))
-  {
+   * If there are restrictions, we check as a mask against `memoryTypeBits`. */
+  uint32_t memory_type_bit = 1u << allocation_info.memoryType;
+  if (allocation_info.memoryType != 0 && !bool(requirements.memoryTypeBits & memory_type_bit)) {
     return {};
   }
 
@@ -375,11 +374,11 @@ void VKTexturePool::log_usage_data()
                 static_cast<float>(total_allocation_size);
 
   CLOG_TRACE(&LOG,
-             "VKTexturePool uses %zu/%zu mb (%.1f%% of %li allocations)",
-             current_usage_data_.acquired_segment_size_max >> 20,
-             total_allocation_size >> 20,
+             "VKTexturePool uses %lu/%lu mb (%.1f%% of %lu allocations)",
+             static_cast<unsigned long>(current_usage_data_.acquired_segment_size_max >> 20),
+             static_cast<unsigned long>(total_allocation_size >> 20),
              ratio * 100.0f,
-             current_usage_data_.allocation_count);
+             static_cast<unsigned long>(current_usage_data_.allocation_count));
 }
 
 }  // namespace blender::gpu

@@ -799,7 +799,7 @@ class NODE_PT_active_node_generic(Panel):
         layout.prop(node, "label", icon='NODE')
 
         if tree.type == 'GEOMETRY':
-            layout.prop(node, "warning_propagation")
+            layout.prop(node, "warning_propagation", text="Propagate")
 
 
 class NODE_PT_active_node_color(Panel):
@@ -965,9 +965,6 @@ class NODE_PT_quality(Panel):
         col.prop(rd, "compositor_device", text="Device")
         if rd.compositor_device == 'GPU':
             col.prop(rd, "compositor_precision", text="Precision")
-
-        col = layout.column()
-        col.prop(tree, "use_viewer_border")
 
 
 class NODE_PT_overlay(Panel):

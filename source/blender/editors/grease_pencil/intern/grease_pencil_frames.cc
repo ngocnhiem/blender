@@ -470,13 +470,13 @@ static bool curves_geometry_is_equal(const bke::CurvesGeometry &curves_a,
   const AttributeAccessor attributes_a = curves_a.attributes();
   const AttributeAccessor attributes_b = curves_b.attributes();
 
-  const Set<StringRefNull> ids_a = attributes_a.all_ids();
-  const Set<StringRefNull> ids_b = attributes_b.all_ids();
-  if (ids_a != ids_b) {
+  const Set<StringRefNull> names_a = attributes_a.all_names();
+  const Set<StringRefNull> names_b = attributes_b.all_names();
+  if (names_a != names_b) {
     return false;
   }
 
-  for (const StringRef id : ids_a) {
+  for (const StringRef id : names_a) {
     GAttributeReader attrs_a = attributes_a.lookup(id);
     GAttributeReader attrs_b = attributes_b.lookup(id);
 
@@ -490,9 +490,7 @@ static bool curves_geometry_is_equal(const bke::CurvesGeometry &curves_a,
 
     bool attributes_are_equal = true;
 
-    attribute_math::convert_to_static_type(attrs_a.varray.type(), [&](auto dummy) {
-      using T = decltype(dummy);
-
+    attribute_math::to_static_type(attrs_a.varray.type(), [&]<typename T>() {
       const VArray attributes_a = attrs_a.varray.typed<T>();
       const VArray attributes_b = attrs_b.varray.typed<T>();
 
